@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ course.name }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-light bg-light">
+    <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Online Courses</a>
+    <div>
+        {% if user.is_authenticated %}
+            <span class="mr-2">{{ user.username }}</span>
+            <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">Logout</a>
+        {% else %}
+            <a class="btn btn-link" href="{% url 'onlinecourse:login' %}">Login</a>
+            <a class="btn btn-link" href="{% url 'onlinecourse:registration' %}">Sign Up</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <h2>{{ course.name }}</h2>
+    <p>{{ course.description }}</p>
+
+    <h4 class="mt-4">Lessons</h4>
+    {% if course.lesson_set.all %}
+        <div class="list-group mb-4">
+            {% for lesson in course.lesson_set.all %}
+                <div class="list-group-item">
+                    <h5>Lesson {{ forloop.counter }}: {{ lesson.title }}</h5>
+                    <p class="mb-0">{{ lesson.content }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No lessons yet.</p>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+        {% if is_enrolled %}
+            <h4>Exam</h4>
+            <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
+                {% csrf_token %}
+                {% for question in course.question_set.all %}
+                    <div class="card mb-3">
+                        <div class="card-header">{{ question.question_text }}</div>
+                        <div class="card-body">
+                            {% for choice in question.choice_set.all %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="choice_{{ choice.id }}"
+                                           id="choice_{{ choice.id }}"
+                                           value="{{ choice.id }}">
+                                    <label class="form-check-label" for="choice_{{ choice.id }}">
+                                        {{ choice.choice_text }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+                <button class="btn btn-success" type="submit">Submit</button>
+            </form>
+        {% else %}
+            <a class="btn btn-primary" href="{% url 'onlinecourse:enroll' course.id %}">Enroll Now</a>
+        {% endif %}
+    {% else %}
+        <p>Please <a href="{% url 'onlinecourse:login' %}">log in</a> to enroll and take the exam.</p>
+    {% endif %}
+</div>
+</body>
+</html>
